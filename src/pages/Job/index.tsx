@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Tree } from 'antd';
+import { Tree, Modal, Input } from 'antd';
 import {
-  // EditOutlined,
+  EditOutlined,
   PlusOutlined,
   MinusOutlined,
   // CloseOutlined,
@@ -46,8 +46,37 @@ const transformTitle = (data) => data.map((item) => {
   }
 })
 
+const ModalDemo = (props) => {
+  const { visible, setVisible, editNode, titleAndKey, setTitleAndKey } = props
+  const [ value, setValue ] = useState('')
+  useEffect(() => {
+    setValue(titleAndKey.title)
+  }, [titleAndKey])
+  const valueChange = e => {
+    setValue(e.target.value)
+  }
+
+  const cancel = () => {
+    setVisible(false)
+    setTitleAndKey({ title: '', key: '' })
+  } 
+
+  const onsubmit = () => {
+    // 这里注意保存修改的数据
+    editNode(titleAndKey.key, value)
+    setVisible(false)
+    setTitleAndKey({ title: '', key: '' })
+  }
+  return <Modal destroyOnClose title="Basic Modal" visible={visible} onOk={() => onsubmit()} onCancel={() => cancel()}>
+          <Input value={value} onChange={(e) => valueChange(e)} />
+        </Modal>
+}
+
 const TreeDemo = () => {
   const [ dataSource, setDataSource ] = useState([])
+
+  const [ titleAndKey, setTitleAndKey ] = useState({ title: '', key: ''})
+  const [ visible, setVisible ] = useState(false)
 
   // 用来记录新增的数组
   const [ addArr, setAddArr ] = useState([])
@@ -111,6 +140,22 @@ const TreeDemo = () => {
     })
   }
 
+  const editNodeForTree = (data, key, text) => data.map(item => {
+    if (item.children && item.children instanceof Array) {
+      return {
+        ...item,
+        title: item.key === key ? text : item.title,
+        value: item.key === key ? text : item.value,
+        children: editNodeForTree(item.children, key, text)
+      }
+    }
+    return {
+      ...item,
+      title: item.key === key ? text : item.title,
+      value: item.key === key ? text : item.value,
+    }
+  })
+
   const addNode = (key) => {
     const newData = addNodeForTree(dataSource, key)
     setDataSource(newData)
@@ -121,13 +166,23 @@ const TreeDemo = () => {
     setDataSource(newData)
   }
 
+  const editNode = (key, text) => {
+    const newData = editNodeForTree(dataSource, key, text)
+    setDataSource(newData)
+  }
+
+  const showModal = (title, key) => {
+    setVisible(true)
+    setTitleAndKey({ title, key })
+  }
+
   const renderTitle = (nodeData) => <div>
           <span>{nodeData.title}</span>
           <span>
-            {/* <EditOutlined
+            <EditOutlined
               style={{ marginLeft: 10 }}
-              onClick={() => onEdit(item.key)}
-            /> */}
+              onClick={() => showModal(nodeData.title, nodeData.key)}
+            />
 
             <PlusOutlined
               style={{ marginLeft: 10 }}
@@ -150,10 +205,19 @@ const TreeDemo = () => {
     setDataSource(data)
   }, [])
 
-  return <Tree
-          treeData={dataSource}
-          titleRender={renderTitle}
-        />
+  return <div>
+          <Tree
+            treeData={dataSource}
+            titleRender={renderTitle}
+          />
+          <ModalDemo
+            visible={visible}
+            setVisible={setVisible}
+            titleAndKey={titleAndKey}
+            setTitleAndKey={setTitleAndKey}
+            editNode={editNode}
+          />
+        </div>
 
 }
 
