@@ -1,4 +1,5 @@
 // https://umijs.org/config/
+import component from '@/locales/en-US/component';
 import { defineConfig } from 'umi';
 import defaultSettings from './defaultSettings';
 import proxy from './proxy';
@@ -315,6 +316,11 @@ export default defineConfig({
                   component: './editor/koni',
                 },
               ],
+            },
+            {
+              name: 'job',
+              path: '/job',
+              component: './Job',
             },
             {
               component: '404',
